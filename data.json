@@ -1,0 +1,39 @@
+{
+  "paymentData": [
+    {
+      "n": "Sample Vendor Payment",
+      "a": 100000,
+      "tp": 60000,
+      "b": 40000,
+      "sd": "2026-09-01",
+      "pd": "2026-09-05",
+      "d": 4,
+      "s": "Disburse"
+    },
+    {
+      "n": "Sample Contractor Payment",
+      "a": 50000,
+      "tp": 0,
+      "b": 50000,
+      "sd": "2026-09-10",
+      "pd": "",
+      "d": 0,
+      "s": "Pending"
+    }
+  ],
+  "employeeData": [
+    {
+      "Code": "EMP001",
+      "Name": "Sample Employee",
+      "Designation": "Executive",
+      "Branch": "Head Office",
+      "NetPayable": 35000,
+      "Month": "Sep-2026",
+      "Status": "New",
+      "Remark": "",
+      "SendByHR": "",
+      "Status1": "Pending"
+    }
+  ],
+  "_notes": "Sample/seed data matching the field structure used by index.html. Import via the 'Import Data (CSV)' button after converting to CSV, or use this as a reference for the data shape stored in localStorage keys 'payment_disbursement_exact_data' and 'employee_details_csv_data'."
+}

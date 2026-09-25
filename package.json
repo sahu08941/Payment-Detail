@@ -1,0 +1,23 @@
+{
+  "name": "payment-employee-dashboard",
+  "version": "1.0.0",
+  "description": "A single-page HR dashboard for Payment Disbursement and Employee Details tracking (pure HTML/CSS/JS, no build step, no dependencies).",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "hr",
+    "payroll",
+    "dashboard",
+    "payment-tracker",
+    "employee-management"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "private": false
+}

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Payment &amp; Employee Dashboard</title>
+<style>
+:root{
+  --bg:#0b1220; --bg2:#101a2e; --card:#141f38; --card2:#182545;
+  --text:#eef2fb; --sub:#93a1c2; --border:#243357;
+  --accent:#22d3ee; --accent2:#818cf8; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f3f5fb; --bg2:#ffffff; --card:#ffffff; --card2:#f7f9fe;
+    --text:#101528; --sub:#5b6684; --border:#e3e7f3;
+  }
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:Arial, 'Segoe UI', sans-serif;
+  min-height:100%;
+}
+.wrap{max-width:1280px;margin:0 auto;padding:20px 18px 48px;}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:18px;padding-top:6px;}
+h1{font-size:1.5rem;margin:0 0 4px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.subtitle{color:var(--sub);font-size:.85rem;}
+
+.tab-bar{display:flex;gap:10px;margin-bottom:15px;border-bottom:1px solid var(--border);padding-bottom:10px;}
+.tab-btn{background:var(--card);border:1px solid var(--border);color:var(--sub);padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem;transition:.15s;}
+.tab-btn.active{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#04121f;border-color:transparent;}
+
+.header-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.btn{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#04121f;border:none;border-radius:8px;padding:8px 14px;font-weight:600;font-size:.82rem;cursor:pointer;transition:.15s;}
+.btn:hover{opacity:.9;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 14px;font-weight:600;font-size:.82rem;cursor:pointer;}
+.btn-danger{background:rgba(248,113,113,.2);border:1px solid var(--bad);color:var(--bad);border-radius:8px;padding:8px 14px;font-weight:600;font-size:.82rem;cursor:pointer;}
+.btn-danger:hover{background:var(--bad);color:#fff;}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:18px;}
+.kpi{background:linear-gradient(145deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:14px;padding:14px 16px;}
+.kpi .lbl{font-size:.72rem;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;}
+.kpi .val{font-size:1.3rem;font-weight:700;margin-top:4px;}
+.kpi.good .val{color:var(--good);} .kpi.bad .val{color:var(--bad);} .kpi.warn .val{color:var(--warn);}
+
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:18px;}
+.filters label{font-size:.72rem;color:var(--sub);display:block;margin-bottom:4px;}
+.chip-group{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:.78rem;cursor:pointer;transition:.15s;}
+.chip.active{background:linear-gradient(90deg,var(--accent),var(--accent2));border-color:transparent;color:#04121f;font-weight:600;}
+select,input[type=text],input[type=date],input[type=number],input[type=month]{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:.8rem;}
+.reset-btn{margin-left:auto;background:transparent;border:1px solid var(--border);color:var(--sub);border-radius:8px;padding:7px 12px;font-size:.78rem;cursor:pointer;}
+
+.table-wrap{overflow-x:auto;border:1px solid #b873d6;border-radius:8px;background:#ffffff;max-height:600px;}
+table{border-collapse:collapse;width:100%;min-width:800px;font-size:.82rem;color:#111;}
+th,td{padding:10px 12px;text-align:center;border:1px solid #d4a5ec;white-space:nowrap;}
+th{background:#b76fc5;color:#ffffff;font-weight:700;font-size:.85rem;vertical-align:middle;position:sticky;top:0;z-index:2;}
+td{background:#fff;}
+tr:nth-child(even) td{background:#fdf9fe;}
+
+.status-select {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+.status-select.Disburse, .status-select.Done { background: #34d399; color: #000; }
+.status-select.Pending { background: #fbbf24; color: #000; }
+.status-select.Hold, .status-select.New { background: #f87171; color: #000; }
+
+.rowcount{color:var(--sub);font-size:.75rem;margin:8px 2px;display:flex;justify-content:space-between;align-items:center;}
+
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:100;justify-content:center;align-items:center;}
+.modal.open{display:flex;}
+.modal-content{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;width:100%;max-width:500px;box-shadow:0 10px 30px rgba(0,0,0,0.5);}
+.modal-content h2{margin-top:0;font-size:1.1rem;color:var(--text);margin-bottom:15px;}
+.form-group{margin-bottom:12px;}
+.form-group label{display:block;font-size:.78rem;color:var(--sub);margin-bottom:5px;}
+.form-group input, .form-group select{width:100%;}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+.del-btn{background:rgba(248,113,113,.15);color:var(--bad);border:1px solid var(--bad);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.75rem;}
+.del-btn:hover{background:var(--bad);color:#fff;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Payment &amp; Employee Dashboard</h1>
+      <div class="subtitle">HR Payroll &amp; Detailed Records Management</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-danger" id="bulkDeleteBtn" style="display:none;" onclick="deleteSelectedRecords()">🗑️ Delete Selected (<span id="selectedCount">0</span>)</button>
+      <button class="btn" id="openAddModal">+ Add Record</button>
+      <button class="btn-outline" onclick="document.getElementById('importFile').click()">📤 Import Data (CSV)</button>
+      <input type="file" id="importFile" accept=".csv" style="display:none" onchange="handleFileImport(event)">
+      <button class="btn-outline" onclick="exportDataCSV()">📥 Export Excel (CSV)</button>
+    </div>
+  </header>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('payment')">Payment Disbursement Tab</button>
+    <button class="tab-btn" onclick="switchTab('employee')">Employee Details Tab (Details.csv)</button>
+  </div>
+
+  <!-- TAB 1 -->
+  <div id="tab-payment" class="tab-content active">
+    <div class="kpis" id="kpis-payment"></div>
+    <div class="filters">
+      <div>
+        <label>Status</label>
+        <div class="chip-group" id="statusChips-payment"></div>
+      </div>
+      <div>
+        <label>Payment Name</label>
+        <select id="nameFilter-payment" onchange="renderPayment()"><option value="">All Categories</option></select>
+      </div>
+      <div>
+        <label>Month-wise Filter</label>
+        <input type="month" id="monthFilter-payment" onchange="renderPayment()">
+      </div>
+      <div>
+        <label>From Date</label>
+        <input type="date" id="fromDate-payment" onchange="renderPayment()">
+      </div>
+      <div>
+        <label>To Date</label>
+        <input type="date" id="toDate-payment" onchange="renderPayment()">
+      </div>
+      <button class="reset-btn" onclick="resetPaymentFilters()">Reset Filters</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px;"><input type="checkbox" id="selectAll-payment" onclick="toggleSelectAll('payment', this)"></th>
+            <th>Sn</th>
+            <th>Payment Name</th>
+            <th>Total Amount</th>
+            <th>Total Payment</th>
+            <th>Balance</th>
+            <th>Disbursement Sent Date From HR</th>
+            <th>Payment Date</th>
+            <th>Delay Days</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-payment"></tbody>
+      </table>
+    </div>
+    <div class="rowcount" id="rowcount-payment"></div>
+  </div>
+
+  <!-- TAB 2 -->
+  <div id="tab-employee" class="tab-content">
+    <div class="kpis" id="kpis-employee"></div>
+    <div class="filters">
+      <div>
+        <label>Status</label>
+        <div class="chip-group" id="statusChips-employee"></div>
+      </div>
+      <div>
+        <label>Branch</label>
+        <select id="branchFilter-employee" onchange="renderEmployee()"><option value="">All Branches</option></select>
+      </div>
+      <div>
+        <label>Designation</label>
+        <select id="desigFilter-employee" onchange="renderEmployee()"><option value="">All Designations</option></select>
+      </div>
+      <button class="reset-btn" onclick="resetEmployeeFilters()">Reset Filters</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px;"><input type="checkbox" id="selectAll-employee" onclick="toggleSelectAll('employee', this)"></th>
+            <th>Sn</th>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Designation</th>
+            <th>Branch</th>
+            <th>Net Payable</th>
+            <th>Month / Period</th>
+            <th>Status</th>
+            <th>Remark</th>
+            <th>Send By HR</th>
+            <th>Status.1</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-employee"></tbody>
+      </table>
+    </div>
+    <div class="rowcount" id="rowcount-employee"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="addModal">
+  <div class="modal-content">
+    <h2 id="modalTitle">Add New Record</h2>
+    <form id="addForm" onsubmit="saveNewRecord(event)">
+      <div id="dynamicFormFields"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" onclick="closeAddModal()">Cancel</button>
+        <button type="submit" class="btn">Save Record</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+let currentActiveTab = 'payment';
+
+const INITIAL_PAYMENT = [
+  { n: "Loan", a: 67000, tp: "", b: 67000, sd: "2025-07-30", pd: "", d: 422, s: "Hold" },
+  { n: "Salary", a: 11050045, tp: 11050045, b: 0, sd: "2025-08-07", pd: "2025-08-07", d: 0, s: "Disburse" },
+  { n: "Salary", a: 28745, tp: 28745, b: 0, sd: "2025-08-12", pd: "2025-08-16", d: 4, s: "Pending" }
+];
+
+const INITIAL_EMPLOYEE = [
+  { Code: "TSPL04374", Name: "Jagdeesh Prasad Dubey", Designation: "Visibility Captain", Branch: "Katni", NetPayable: 10004, Month: "45689", Status: "Hold", Remark: "Salary", SendByHR: "45736", Status1: "Done" },
+  { Code: "TSPL04189", Name: "Abhishek", Designation: "Sales Executive", Branch: "Seoni", NetPayable: 1145, Month: "45717", Status: "New", Remark: "LAT VP", SendByHR: "45768", Status1: "Done" },
+  { Code: "TSPL03458", Name: "Anil Kumar Yadav", Designation: "Sales Executive", Branch: "Bilaspur", NetPayable: 9406, Month: "FY_2024-25", Status: "Hold", Remark: "Bonus", SendByHR: "46032", Status1: "Hold" },
+  { Code: "PG02118", Name: "Deepak Soni", Designation: "DFE", Branch: "Raipur", NetPayable: 8000, Month: "46235", Status: "New", Remark: "VP", SendByHR: "46282", Status1: "Pending" }
+];
+
+let PAYMENT_DATA = JSON.parse(localStorage.getItem('payment_disbursement_exact_data')) || INITIAL_PAYMENT;
+let EMPLOYEE_DATA = JSON.parse(localStorage.getItem('employee_details_csv_data')) || INITIAL_EMPLOYEE;
+
+let statusFilterPayment = '';
+let statusFilterEmployee = '';
+let selectedIdsPayment = new Set();
+let selectedIdsEmployee = new Set();
+
+function formatINR(val) {
+  if(val === "" || val === null || val === undefined || isNaN(val)) return '-';
+  return Number(val).toLocaleString('en-IN');
+}
+
+function switchTab(tab) {
+  currentActiveTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  
+  if(tab === 'payment') {
+    document.querySelector('.tab-bar button:nth-child(1)').classList.add('active');
+    document.getElementById('tab-payment').classList.add('active');
+    renderPayment();
+  } else {
+    document.querySelector('.tab-bar button:nth-child(2)').classList.add('active');
+    document.getElementById('tab-employee').classList.add('active');
+    renderEmployee();
+  }
+  selectedIdsPayment.clear();
+  selectedIdsEmployee.clear();
+  updateBulkDeleteButton();
+}
+
+function initChips() {
+  const pStatuses = ['All', 'Disburse', 'Pending', 'Hold'];
+  const pContainer = document.getElementById('statusChips-payment');
+  pContainer.innerHTML = '';
+  pStatuses.forEach(st => {
+    const btn = document.createElement('button');
+    btn.className = 'chip' + ((st === 'All' && !statusFilterPayment) || st === statusFilterPayment ? ' active' : '');
+    btn.textContent = st;
+    btn.onclick = () => {
+      statusFilterPayment = st === 'All' ? '' : st;
+      initChips();
+      renderPayment();
+    };
+    pContainer.appendChild(btn);
+  });
+
+  const eStatuses = ['All', 'Hold', 'New', 'Done', 'Pending'];
+  const eContainer = document.getElementById('statusChips-employee');
+  eContainer.innerHTML = '';
+  eStatuses.forEach(st => {
+    const btn = document.createElement('button');
+    btn.className = 'chip' + ((st === 'All' && !statusFilterEmployee) || st === statusFilterEmployee ? ' active' : '');
+    btn.textContent = st;
+    btn.onclick = () => {
+      statusFilterEmployee = st === 'All' ? '' : st;
+      initChips();
+      renderEmployee();
+    };
+    eContainer.appendChild(btn);
+  });
+}
+
+function initDropdowns() {
+  const pSelect = document.getElementById('nameFilter-payment');
+  const cats = [...new Set(PAYMENT_DATA.map(d => d.n))].sort();
+  const currP = pSelect.value;
+  pSelect.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  pSelect.value = currP;
+
+  const bSelect = document.getElementById('branchFilter-employee');
+  const branches = [...new Set(EMPLOYEE_DATA.map(d => d.Branch))].sort();
+  const currB = bSelect.value;
+  bSelect.innerHTML = '<option value="">All Branches</option>' + branches.map(b => `<option value="${b}">${b}</option>`).join('');
+  bSelect.value = currB;
+
+  const dSelect = document.getElementById('desigFilter-employee');
+  const desigs = [...new Set(EMPLOYEE_DATA.map(d => d.Designation))].sort();
+  const currD = dSelect.value;
+  dSelect.innerHTML = '<option value="">All Designations</option>' + desigs.map(d => `<option value="${d}">${d}</option>`).join('');
+  dSelect.value = currD;
+}
+
+function getFilteredPayment() {
+  const cat = document.getElementById('nameFilter-payment').value;
+  const monthVal = document.getElementById('monthFilter-payment').value;
+  const from = document.getElementById('fromDate-payment').value;
+  const to = document.getElementById('toDate-payment').value;
+
+  return PAYMENT_DATA.filter(d => {
+    if (statusFilterPayment && d.s !== statusFilterPayment) return false;
+    if (cat && d.n !== cat) return false;
+    if (monthVal) {
+      const matchSd = d.sd && d.sd.startsWith(monthVal);
+      const matchPd = d.pd && d.pd.startsWith(monthVal);
+      if (!matchSd && !matchPd) return false;
+    }
+    if (from && d.sd < from) return false;
+    if (to && d.sd > to) return false;
+    return true;
+  });
+}
+
+function renderPayment() {
+  const filtered = getFilteredPayment();
+  const tbody = document.getElementById('tbody-payment');
+  tbody.innerHTML = '';
+
+  let totalAmt = 0, totalBal = 0, disburseCount = 0, pendingCount = 0, holdCount = 0;
+  let frag = document.createDocumentFragment();
+
+  const displayLimit = Math.min(filtered.length, 500);
+
+  for(let idx = 0; idx < displayLimit; idx++) {
+    const d = filtered[idx];
+    totalAmt += Number(d.a) || 0;
+    totalBal += Number(d.b) || 0;
+    if(d.s === 'Disburse') disburseCount++;
+    else if(d.s === 'Pending') pendingCount++;
+    else if(d.s === 'Hold') holdCount++;
+
+    const isChecked = selectedIdsPayment.has(idx) ? 'checked' : '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="checkbox" class="row-checkbox-p" data-index="${idx}" ${isChecked} onclick="toggleRowSelection('payment', this, ${idx})"></td>
+      <td><strong>${idx + 1}</strong></td>
+      <td style="text-align:left;"><strong>${d.n}</strong></td>
+      <td style="text-align:right;">${formatINR(d.a)}</td>
+      <td style="text-align:right;">${formatINR(d.tp)}</td>
+      <td style="text-align:right;">${formatINR(d.b)}</td>
+      <td>${d.sd || '-'}</td>
+      <td>${d.pd || '-'}</td>
+      <td><strong>${d.d}</strong></td>
+      <td>
+        <select class="status-select ${d.s}" onchange="updateStatus('payment', ${idx}, this.value)">
+          <option value="Disburse" ${d.s === 'Disburse' ? 'selected' : ''}>Disburse</option>
+          <option value="Pending" ${d.s === 'Pending' ? 'selected' : ''}>Pending</option>
+          <option value="Hold" ${d.s === 'Hold' ? 'selected' : ''}>Hold</option>
+        </select>
+      </td>
+      <td><button class="del-btn" onclick="deleteRecord('payment', ${idx})">Delete</button></td>
+    `;
+    frag.appendChild(tr);
+  }
+  tbody.appendChild(frag);
+
+  document.getElementById('rowcount-payment').innerHTML = `<span>Showing ${displayLimit} of ${filtered.length} Records</span>`;
+  document.getElementById('kpis-payment').innerHTML = `
+    <div class="kpi"><div class="lbl">Total Amount</div><div class="val">${formatINR(totalAmt)}</div></div>
+    <div class="kpi"><div class="lbl">Balance Due</div><div class="val">${formatINR(totalBal)}</div></div>
+    <div class="kpi good"><div class="lbl">Disbursed</div><div class="val">${disburseCount}</div></div>
+    <div class="kpi warn"><div class="lbl">Pending / Hold</div><div class="val">${pendingCount + holdCount}</div></div>
+  `;
+}
+
+function getFilteredEmployee() {
+  const branch = document.getElementById('branchFilter-employee').value;
+  const desig = document.getElementById('desigFilter-employee').value;
+
+  return EMPLOYEE_DATA.filter(d => {
+    if (statusFilterEmployee && d.Status !== statusFilterEmployee && d.Status1 !== statusFilterEmployee) return false;
+    if (branch && d.Branch !== branch) return false;
+    if (desig && d.Designation !== desig) return false;
+    return true;
+  });
+}
+
+function renderEmployee() {
+  const filtered = getFilteredEmployee();
+  const tbody = document.getElementById('tbody-employee');
+  tbody.innerHTML = '';
+
+  let totalPayable = 0;
+  let frag = document.createDocumentFragment();
+  const displayLimit = Math.min(filtered.length, 500);
+
+  for(let idx = 0; idx < displayLimit; idx++) {
+    const d = filtered[idx];
+    totalPayable += Number(d.NetPayable) || 0;
+    const isChecked = selectedIdsEmployee.has(idx) ? 'checked' : '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="checkbox" class="row-checkbox-e" data-index="${idx}" ${isChecked} onclick="toggleRowSelection('employee', this, ${idx})"></td>
+      <td><strong>${idx + 1}</strong></td>
+      <td>${d.Code || ''}</td>
+      <td style="text-align:left;"><strong>${d.Name || ''}</strong></td>
+      <td>${d.Designation || ''}</td>
+      <td>${d.Branch || ''}</td>
+      <td style="text-align:right;">${formatINR(d.NetPayable)}</td>
+      <td>${d.Month || ''}</td>
+      <td>
+        <select class="status-select ${d.Status}" onchange="updateStatus('employee-status', ${idx}, this.value)">
+          <option value="Hold" ${d.Status === 'Hold' ? 'selected' : ''}>Hold</option>
+          <option value="New" ${d.Status === 'New' ? 'selected' : ''}>New</option>
+          <option value="Done" ${d.Status === 'Done' ? 'selected' : ''}>Done</option>
+        </select>
+      </td>
+      <td>${d.Remark || ''}</td>
+      <td>${d.SendByHR || ''}</td>
+      <td>
+        <select class="status-select ${d.Status1}" onchange="updateStatus('employee-status1', ${idx}, this.value)">
+          <option value="Done" ${d.Status1 === 'Done' ? 'selected' : ''}>Done</option>
+          <option value="Pending" ${d.Status1 === 'Pending' ? 'selected' : ''}>Pending</option>
+          <option value="Hold" ${d.Status1 === 'Hold' ? 'selected' : ''}>Hold</option>
+        </select>
+      </td>
+      <td><button class="del-btn" onclick="deleteRecord('employee', ${idx})">Delete</button></td>
+    `;
+    frag.appendChild(tr);
+  }
+  tbody.appendChild(frag);
+
+  document.getElementById('rowcount-employee').innerHTML = `<span>Showing ${displayLimit} of ${filtered.length} Records</span>`;
+  document.getElementById('kpis-employee').innerHTML = `
+    <div class="kpi"><div class="lbl">Total Net Payable</div><div class="val">${formatINR(totalPayable)}</div></div>
+    <div class="kpi"><div class="lbl">Total Employees</div><div class="val">${filtered.length}</div></div>
+  `;
+}
+
+function toggleSelectAll(tab, master) {
+  if(tab === 'payment') {
+    selectedIdsPayment.clear();
+    document.querySelectorAll('.row-checkbox-p').forEach(cb => {
+      cb.checked = master.checked;
+      if(cb.checked) selectedIdsPayment.add(parseInt(cb.dataset.index));
+    });
+  } else {
+    selectedIdsEmployee.clear();
+    document.querySelectorAll('.row-checkbox-e').forEach(cb => {
+      cb.checked = master.checked;
+      if(cb.checked) selectedIdsEmployee.add(parseInt(cb.dataset.index));
+    });
+  }
+  updateBulkDeleteButton();
+}
+
+function toggleRowSelection(tab, cb, idx) {
+  if(tab === 'payment') {
+    if(cb.checked) selectedIdsPayment.add(idx);
+    else { selectedIdsPayment.delete(idx); document.getElementById('selectAll-payment').checked = false; }
+  } else {
+    if(cb.checked) selectedIdsEmployee.add(idx);
+    else { selectedIdsEmployee.delete(idx); document.getElementById('selectAll-employee').checked = false; }
+  }
+  updateBulkDeleteButton();
+}
+
+function updateBulkDeleteButton() {
+  const btn = document.getElementById('bulkDeleteBtn');
+  const countSpan = document.getElementById('selectedCount');
+  const size = currentActiveTab === 'payment' ? selectedIdsPayment.size : selectedIdsEmployee.size;
+  if(size > 0) {
+    btn.style.display = 'inline-block';
+    countSpan.textContent = size;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+function updateStatus(type, filteredIdx, val) {
+  if(type === 'payment') {
+    const filtered = getFilteredPayment();
+    const item = filtered[filteredIdx];
+    const mainIdx = PAYMENT_DATA.findIndex(d => d === item);
+    if(mainIdx > -1) {
+      PAYMENT_DATA[mainIdx].s = val;
+      localStorage.setItem('payment_disbursement_exact_data', JSON.stringify(PAYMENT_DATA));
+      renderPayment();
+    }
+  } else {
+    const filtered = getFilteredEmployee();
+    const item = filtered[filteredIdx];
+    const mainIdx = EMPLOYEE_DATA.findIndex(d => d === item);
+    if(mainIdx > -1) {
+      if(type === 'employee-status') EMPLOYEE_DATA[mainIdx].Status = val;
+      else EMPLOYEE_DATA[mainIdx].Status1 = val;
+      localStorage.setItem('employee_details_csv_data', JSON.stringify(EMPLOYEE_DATA));
+      renderEmployee();
+    }
+  }
+}
+
+function deleteRecord(tab, filteredIdx) {
+  if(confirm('Kya aap is record ko delete karna chahte hain?')) {
+    if(tab === 'payment') {
+      const filtered = getFilteredPayment();
+      const mainIdx = PAYMENT_DATA.findIndex(d => d === filtered[filteredIdx]);
+      if(mainIdx > -1) PAYMENT_DATA.splice(mainIdx, 1);
+      localStorage.setItem('payment_disbursement_exact_data', JSON.stringify(PAYMENT_DATA));
+      renderPayment();
+    } else {
+      const filtered = getFilteredEmployee();
+      const mainIdx = EMPLOYEE_DATA.findIndex(d => d === filtered[filteredIdx]);
+      if(mainIdx > -1) EMPLOYEE_DATA.splice(mainIdx, 1);
+      localStorage.setItem('employee_details_csv_data', JSON.stringify(EMPLOYEE_DATA));
+      renderEmployee();
+    }
+  }
+}
+
+function deleteSelectedRecords() {
+  if(confirm('Kya aap selected records ko delete karna chahte hain?')) {
+    if(currentActiveTab === 'payment') {
+      const filtered = getFilteredPayment();
+      const indices = Array.from(selectedIdsPayment).sort((a,b) => b - a);
+      indices.forEach(i => {
+        const mainIdx = PAYMENT_DATA.findIndex(d => d === filtered[i]);
+        if(mainIdx > -1) PAYMENT_DATA.splice(mainIdx, 1);
+      });
+      selectedIdsPayment.clear();
+      document.getElementById('selectAll-payment').checked = false;
+      localStorage.setItem('payment_disbursement_exact_data', JSON.stringify(PAYMENT_DATA));
+      renderPayment();
+    } else {
+      const filtered = getFilteredEmployee();
+      const indices = Array.from(selectedIdsEmployee).sort((a,b) => b - a);
+      indices.forEach(i => {
+        const mainIdx = EMPLOYEE_DATA.findIndex(d => d === filtered[i]);
+        if(mainIdx > -1) EMPLOYEE_DATA.splice(mainIdx, 1);
+      });
+      selectedIdsEmployee.clear();
+      document.getElementById('selectAll-employee').checked = false;
+      localStorage.setItem('employee_details_csv_data', JSON.stringify(EMPLOYEE_DATA));
+      renderEmployee();
+    }
+    updateBulkDeleteButton();
+  }
+}
+
+function handleFileImport(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    try {
+      const text = evt.target.result;
+      const lines = text.split(/\r\n|\n/);
+      let count = 0;
+      
+      if(currentActiveTab === 'payment') {
+        for(let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if(!line) continue;
+          const cols = line.split(',');
+          if(cols.length >= 2) {
+            PAYMENT_DATA.push({
+              n: cols[1]?.replace(/"/g, '').trim() || 'Imported',
+              a: parseFloat(cols[2]) || 0,
+              tp: cols[3] && !isNaN(cols[3]) ? parseFloat(cols[3]) : "",
+              b: parseFloat(cols[4]) || 0,
+              sd: cols[5]?.trim() || '',
+              pd: cols[6]?.trim() || '',
+              d: 0,
+              s: cols[8]?.replace(/"/g, '').trim() || 'Disburse'
+            });
+            count++;
+          }
+        }
+        localStorage.setItem('payment_disbursement_exact_data', JSON.stringify(PAYMENT_DATA));
+        initDropdowns();
+        renderPayment();
+      } else {
+        for(let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if(!line) continue;
+          const cols = line.split(',');
+          if(cols.length >= 2) {
+            EMPLOYEE_DATA.push({
+              Code: cols[0]?.replace(/"/g, '').trim() || '',
+              Name: cols[1]?.replace(/"/g, '').trim() || 'Imported Name',
+              Designation: cols[2]?.replace(/"/g, '').trim() || '',
+              Branch: cols[3]?.replace(/"/g, '').trim() || '',
+              NetPayable: parseFloat(cols[4]) || 0,
+              Month: cols[5]?.replace(/"/g, '').trim() || '',
+              Status: cols[6]?.replace(/"/g, '').trim() || 'New',
+              Remark: cols[7]?.replace(/"/g, '').trim() || '',
+              SendByHR: cols[8]?.replace(/"/g, '').trim() || '',
+              Status1: cols[9]?.replace(/"/g, '').trim() || 'Pending'
+            });
+            count++;
+          }
+        }
+        localStorage.setItem('employee_details_csv_data', JSON.stringify(EMPLOYEE_DATA));
+        initDropdowns();
+        renderEmployee();
+      }
+      alert(`${count} records successfully import ho gaye hain!`);
+    } catch(err) {
+      alert('Import karne mein error aaya hai. Kripya valid CSV file upload karein.');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function exportDataCSV() {
+  let csv = '';
+  if(currentActiveTab === 'payment') {
+    const filtered = getFilteredPayment();
+    csv = 'Sn,Payment Name,Total Amount,Total Payment,Balance,Disbursement Sent Date From HR,Payment Date,Delay Days,Status\n';
+    filtered.forEach((d, idx) => { csv += `${idx+1},"${d.n || ''}",${d.a || 0},${d.tp || 0},${d.b || 0},"${d.sd || ''}","${d.pd || ''}",${d.d || 0},"${d.s || ''}"\n`; });
+  } else {
+    const filtered = getFilteredEmployee();
+    csv = 'Code,Name,Designation,Branch,Net Payable,Month,Status,Remark,Send By HR,Status.1\n';
+    filtered.forEach(d => { csv += `"${d.Code || ''}","${d.Name || ''}","${d.Designation || ''}","${d.Branch || ''}",${d.NetPayable || 0},"${d.Month || ''}","${d.Status || ''}","${d.Remark || ''}","${d.SendByHR || ''}","${d.Status1 || ''}"\n`; });
+  }
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = currentActiveTab === 'payment' ? 'payment_records.csv' : 'Details_exported.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('openAddModal').onclick = () => {
+  document.getElementById('addModal').classList.add('open');
+  const container = document.getElementById('dynamicFormFields');
+  if(currentActiveTab === 'payment') {
+    document.getElementById('modalTitle').textContent = 'Add Payment Record';
+    container.innerHTML = `
+      <div class="form-group"><label>Payment Name</label><input type="text" id="pName" required></div>
+      <div class="form-group"><label>Total Amount</label><input type="number" id="pAmount" required></div>
+      <div class="form-group"><label>Total Payment</label><input type="number" id="pTotalPay"></div>
+      <div class="form-group"><label>Balance</label><input type="number" id="pBalance" required></div>
+      <div class="form-group"><label>Sent Date</label><input type="date" id="pSentDate" required></div>
+      <div class="form-group"><label>Payment Date</label><input type="date" id="pPayDate"></div>
+      <div class="form-group"><label>Status</label><select id="pStatus"><option value="Disburse">Disburse</option><option value="Pending">Pending</option><option value="Hold">Hold</option></select></div>
+    `;
+  } else {
+    document.getElementById('modalTitle').textContent = 'Add Employee Details Record';
+    container.innerHTML = `
+      <div class="form-group"><label>Code</label><input type="text" id="eCode" required></div>
+      <div class="form-group"><label>Name</label><input type="text" id="eName" required></div>
+      <div class="form-group"><label>Designation</label><input type="text" id="eDesig" required></div>
+      <div class="form-group"><label>Branch</label><input type="text" id="eBranch" required></div>
+      <div class="form-group"><label>Net Payable</label><input type="number" id="ePayable" required></div>
+      <div class="form-group"><label>Month / Period</label><input type="text" id="eMonth" required></div>
+      <div class="form-group"><label>Status</label><select id="eStatus"><option value="Hold">Hold</option><option value="New">New</option><option value="Done">Done</option></select></div>
+      <div class="form-group"><label>Remark</label><input type="text" id="eRemark"></div>
+      <div class="form-group"><label>Send By HR</label><input type="text" id="eSendByHR"></div>
+      <div class="form-group"><label>Status.1</label><select id="eStatus1"><option value="Done">Done</option><option value="Pending">Pending</option><option value="Hold">Hold</option></select></div>
+    `;
+  }
+};
+
+function closeAddModal() {
+  document.getElementById('addModal').classList.remove('open');
+}
+
+function saveNewRecord(e) {
+  e.preventDefault();
+  if(currentActiveTab === 'payment') {
+    const sd = document.getElementById('pSentDate').value;
+    const pd = document.getElementById('pPayDate').value;
+    let delay = 0;
+    if(sd && pd) delay = Math.max(0, Math.round((new Date(pd) - new Date(sd)) / (1000 * 60 * 60 * 24)));
+    
+    PAYMENT_DATA.unshift({
+      n: document.getElementById('pName').value,
+      a: parseFloat(document.getElementById('pAmount').value) || 0,
+      tp: document.getElementById('pTotalPay').value !== "" ? parseFloat(document.getElementById('pTotalPay').value) : "",
+      b: parseFloat(document.getElementById('pBalance').value) || 0,
+      sd: sd, pd: pd, d: delay,
+      s: document.getElementById('pStatus').value
+    });
+    localStorage.setItem('payment_disbursement_exact_data', JSON.stringify(PAYMENT_DATA));
+    initDropdowns();
+    renderPayment();
+  } else {
+    EMPLOYEE_DATA.unshift({
+      Code: document.getElementById('eCode').value,
+      Name: document.getElementById('eName').value,
+      Designation: document.getElementById('eDesig').value,
+      Branch: document.getElementById('eBranch').value,
+      NetPayable: parseFloat(document.getElementById('ePayable').value) || 0,
+      Month: document.getElementById('eMonth').value,
+      Status: document.getElementById('eStatus').value,
+      Remark: document.getElementById('eRemark').value,
+      SendByHR: document.getElementById('eSendByHR').value,
+      Status1: document.getElementById('eStatus1').value
+    });
+    localStorage.setItem('employee_details_csv_data', JSON.stringify(EMPLOYEE_DATA));
+    initDropdowns();
+    renderEmployee();
+  }
+  closeAddModal();
+}
+
+function resetPaymentFilters() {
+  statusFilterPayment = '';
+  document.getElementById('nameFilter-payment').value = '';
+  document.getElementById('monthFilter-payment').value = '';
+  document.getElementById('fromDate-payment').value = '';
+  document.getElementById('toDate-payment').value = '';
+  initChips();
+  renderPayment();
+}
+
+function resetEmployeeFilters() {
+  statusFilterEmployee = '';
+  document.getElementById('branchFilter-employee').value = '';
+  document.getElementById('desigFilter-employee').value = '';
+  initChips();
+  renderEmployee();
+}
+
+initChips();
+initDropdowns();
+renderPayment();
+renderEmployee();
+</script>
+</body>
+</html>
